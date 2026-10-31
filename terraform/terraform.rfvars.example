@@ -1,0 +1,7 @@
+pm_api_url          = "https://192.168.1.77:8006/api2/json"
+pm_api_token_id     = "terrauser@pve!mytoken"
+pm_api_token_secret = "ur-token"
+
+virtual_machines = {
+  "testvm" = { id = 201, cores = 2, memory = 4096, size = 20, ip = "192.168.1.201/24" }
+}
