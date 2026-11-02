@@ -2,7 +2,8 @@
 # DevOps-тренажёр: ломает Ubuntu-VM и проверяет, как ты её починил.
 set -euo pipefail
 
-. "$(cd "$(dirname "$0")" && pwd)/lib/common.sh"
+# readlink -f: скрипт можно вызывать через симлинк (например, /usr/local/bin/trainer)
+. "$(dirname "$(readlink -f "$0")")/lib/common.sh"
 
 usage() {
   cat <<EOF

@@ -21,7 +21,7 @@ Ansible, Terraform, Prometheus и Git. Набор сверен с тем, что
 
 Скопировать тренажёр на сервер (с Mac):
 ```bash
-rsync -av --exclude .git ~/Desktop/devops-interview-tasks/ user@server:~/devops-trainer/
+rsync -av --exclude .git ~/Desktop/devops-interview-tasks/ ubuntu@server:~/devops-trainer/
 ```
 
 На сервере:
@@ -41,6 +41,12 @@ sudo ./trainer.sh check linux-01     # проверить решение
 sudo ./trainer.sh theory linux-01    # теория по теме задачи
 sudo ./trainer.sh solution linux-01  # разбор (спросит, точно ли сдаёшься)
 ```
+
+Чтобы запускать из любого каталога, один раз добавь алиас (путь — где лежит тренажёр):
+```bash
+echo "alias trainer='sudo $HOME/devops-trainer/trainer.sh'" >> ~/.bashrc && source ~/.bashrc
+```
+После этого без `sudo`: `trainer list`, `trainer start linux-01` и т.д.
 
 Ответы для задач-расследований пишутся в `/root/answers/<id>.txt` в формате `key=value`.
 Kubernetes: `sudo kubectl …` или `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml`.
