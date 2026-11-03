@@ -36,6 +36,8 @@ sudo ./trainer.sh setup --all    # то же + сразу Docker, PostgreSQL, ng
 ```bash
 sudo ./trainer.sh list               # все задачи и прогресс (или: list linux)
 sudo ./trainer.sh start linux-01     # сломать и показать описание
+sudo ./trainer.sh random             # случайная нерешённая задача (как на собеседовании)
+sudo ./trainer.sh random linux nginx --junior   # случайная из тем и уровня; --all — и из решённых
 sudo ./trainer.sh show linux-01      # описание ещё раз
 sudo ./trainer.sh check linux-01     # проверить решение
 sudo ./trainer.sh theory linux-01    # теория по теме задачи
@@ -205,7 +207,7 @@ Kubernetes: `sudo kubectl …` или `export KUBECONFIG=/etc/rancher/k3s/k3s.ya
 3. **Неделя 3 — bash и сеть:** linux-30, 31, 39, 40, 41 + linux-08, 16, 21, 23, 25, 27, 28, 34, 37, 38, 44.
 4. **Неделя 4 — веб и базы:** nginx-01…06, postgres-01…05, mysql-01.
 5. **Неделя 5 — контейнеры и IaC:** docker-01…07, k8s-01…06, ansible-01, 02, terraform-01, monitoring-01, git-01…03.
-6. **Финал:** выбирай задачи вслепую (по номеру, не глядя в название) и решай на время.
+6. **Финал:** `sudo ./trainer.sh random` — задача вслепую, решай на время.
 
 ## Откуда задачи
 

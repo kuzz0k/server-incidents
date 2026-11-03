@@ -15,6 +15,8 @@ usage() {
   list [тема]       список задач: linux, nginx, postgres, mysql, docker, k8s,
                     ansible, terraform, monitoring, git
   start <id>        подготовить задачу (сломать) и показать описание
+  random [тема…] [--junior|--middle] [--all]
+                    запустить случайную нерешённую задачу (--all: из всех)
   show <id>         показать описание задачи ещё раз
   check <id>        проверить решение
   theory <id>       теория по теме задачи (вопросы с ответами из theory/interview.md)
@@ -115,6 +117,38 @@ cmd_start() {
   cmd_show "$ID"
 }
 
+# random [тема…] [--junior|--middle] [--all] — запустить случайную задачу (по умолчанию ещё не решённую)
+cmd_random() {
+  local topics=() level='' all='' arg env t candidates=()
+  for arg in "$@"; do
+    case $arg in
+      --junior) level=junior ;;
+      --middle) level=middle ;;
+      --all) all=1 ;;
+      -*) die "Неизвестный флаг $arg (есть --junior, --middle, --all)" ;;
+      *)
+        [[ " $TRAINER_TOPICS " == *" $arg "* ]] || die "Неизвестная тема $arg (есть: $TRAINER_TOPICS)"
+        topics+=("$arg") ;;
+    esac
+  done
+  for env in $(task_envs); do
+    ID='' LEVEL='' TOPIC=''
+    # shellcheck disable=SC1090
+    . "$env"
+    if ((${#topics[@]})); then
+      for t in "${topics[@]}"; do [[ $TOPIC == "$t" ]] && break; done
+      [[ $TOPIC == "$t" ]] || continue
+    fi
+    [[ -z $level || $LEVEL == "$level" ]] || continue
+    [[ -n $all || ! -f $STATE_DIR/$ID.solved ]] || continue
+    candidates+=("$ID")
+  done
+  ((${#candidates[@]})) || die "Подходящих нерешённых задач нет (добавь --all, чтобы выбирать и из решённых)"
+  local id=${candidates[RANDOM % ${#candidates[@]}]}
+  info "Случайная задача: $id (выбрана из ${#candidates[@]})"
+  cmd_start "$id"
+}
+
 cmd_check() {
   load_task "$1"
   mkdir -p "$STATE_DIR"
@@ -175,6 +209,7 @@ main() {
     setup)    cmd_setup "$@" ;;
     list)     cmd_list "$@" ;;
     start)    [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_start "$1" ;;
+    random)   cmd_random "$@" ;;
     show)     [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_show "$1" ;;
     check)    [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_check "$1" ;;
     theory)   [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_theory "$1" ;;
