@@ -3,6 +3,8 @@ set -euo pipefail
 TASK_ID=linux-27
 . "$(dirname "$0")/../../../lib/common.sh"
 
+remember timezone "$(timedatectl show -p Timezone --value)"
+remember ntp "$(timedatectl show -p NTP --value)"
 if systemctl is-active -q chrony 2>/dev/null; then
   systemctl disable --now chrony >/dev/null 2>&1
   touch "$TASK_VAR/had-chrony"

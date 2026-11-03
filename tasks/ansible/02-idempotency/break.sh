@@ -6,6 +6,7 @@ TASK_ID=ansible-02
 remove_user appuser
 getent group appusers >/dev/null && groupdel appusers
 rm -rf /opt/app /etc/app
+save_original /etc/motd
 sed -i '/^Managed by Ansible$/d' /etc/motd 2>/dev/null || true
 mkdir -p /opt/trainer-ansible/base
 cat > /opt/trainer-ansible/base/base.yml <<'EOF'

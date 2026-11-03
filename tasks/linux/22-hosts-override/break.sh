@@ -6,9 +6,8 @@ TASK_ID=linux-22
 install_webapp
 remove_unit payments-api
 ensure_user payments
-hosts_drop 'api\.payments\.internal'
+hosts_drop 'api\.payments\.internal|^# payments API$'
 cat >> /etc/hosts <<'EOF'
-
 # payments API
 127.0.0.21   api.payments.internal
 127.0.0.22   api.payments.internal payments-api

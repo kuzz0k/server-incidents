@@ -4,6 +4,7 @@ TASK_ID=postgres-04
 . "$(dirname "$0")/../../../lib/common.sh"
 
 D=$(pg_dir)
+save_original "$D/postgresql.conf"
 remove_unit report-worker
 ensure_user report
 psql_su -c "DROP DATABASE IF EXISTS reportsdb"

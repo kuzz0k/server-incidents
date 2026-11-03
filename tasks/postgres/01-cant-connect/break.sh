@@ -4,6 +4,8 @@ TASK_ID=postgres-01
 . "$(dirname "$0")/../../../lib/common.sh"
 
 D=$(pg_dir)
+save_original "$D/pg_hba.conf"
+save_original "$D/postgresql.conf"
 psql_su -c "DROP DATABASE IF EXISTS shopdb WITH (FORCE)" 2>/dev/null || psql_su -c "DROP DATABASE IF EXISTS shopdb"
 psql_su -c "DROP ROLE IF EXISTS shop"
 sed -i -E '/^\s*host\S*\s+\S+\s+shop\s/d' "$D/pg_hba.conf"

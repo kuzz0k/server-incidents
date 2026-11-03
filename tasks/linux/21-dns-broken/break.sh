@@ -6,6 +6,7 @@ TASK_ID=linux-21
 getent hosts archive.ubuntu.com >/dev/null || die "DNS уже не работает — сначала почини его, иначе задачу не проверить"
 systemctl is-active -q systemd-resolved || die "Задача рассчитана на systemd-resolved, а он не запущен"
 
+save_original /etc/resolv.conf
 mkdir -p /etc/systemd/resolved.conf.d
 cat > /etc/systemd/resolved.conf.d/90-corp-dns.conf <<'EOF'
 # Corporate DNS (OPS-2231)

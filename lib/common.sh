@@ -131,6 +131,54 @@ hosts_drop() {
   rm -f "$tmp"
 }
 
+# --- исходное состояние для отката (reset.sh) -------------------------------
+
+_orig_key() { printf '%s' "$1" | tr '/' '_'; }
+
+# save_original <path> — при первой поломке запомнить исходный файл (или то, что его не было).
+# Повторный start ничего не перезаписывает: хранится состояние до самой первой поломки.
+save_original() {
+  local key; key=$(_orig_key "$1")
+  [[ -e $TASK_VAR/orig/$key.saved ]] && return 0
+  mkdir -p "$TASK_VAR/orig"
+  if [[ -e $1 || -L $1 ]]; then cp -a "$1" "$TASK_VAR/orig/$key"; fi
+  echo "$1" > "$TASK_VAR/orig/$key.saved"
+}
+
+# restore_original <path> — вернуть файл как было до задачи (удалить, если его не было)
+restore_original() {
+  local key; key=$(_orig_key "$1")
+  [[ -e $TASK_VAR/orig/$key.saved ]] || return 0
+  rm -rf "$1"
+  if [[ -e $TASK_VAR/orig/$key || -L $TASK_VAR/orig/$key ]]; then cp -a "$TASK_VAR/orig/$key" "$1"; fi
+}
+
+# remember <key> <value> / recall <key> — запомнить значение до первой поломки
+remember() { mkdir -p "$TASK_VAR/orig"; [[ -e $TASK_VAR/orig/$1.val ]] || printf '%s\n' "$2" > "$TASK_VAR/orig/$1.val"; }
+recall() { cat "$TASK_VAR/orig/$1.val" 2>/dev/null; }
+
+# --- хелперы для reset.sh -------------------------------------------------------
+
+remove_group() { local g; for g; do getent group "$g" >/dev/null && groupdel "$g" 2>/dev/null; done; return 0; }
+
+# remove_cron_refs <строка> — убрать задания cron (cron.d и crontab root), где встречается строка
+remove_cron_refs() {
+  grep -lsF -- "$1" /etc/cron.d/* | xargs -r rm -f
+  if crontab -l >/dev/null 2>&1; then crontab -l | grep -vF -- "$1" | crontab -; fi
+  return 0
+}
+
+# nat_drop_port <порт> — удалить все правила таблицы nat с --dport <порт>
+nat_drop_port() {
+  local rule
+  while rule=$(iptables -t nat -S 2>/dev/null | grep -E -- "--dport $1( |$)" | head -1) && [[ -n $rule ]]; do
+    eval "iptables -t nat ${rule/-A /-D }" || break
+  done
+}
+
+# rmdir_empty <каталог…> — удалить каталоги, только если они пусты
+rmdir_empty() { local d; for d; do rmdir "$d" 2>/dev/null; done; return 0; }
+
 # --- ответы на задачи-расследования ----------------------------------------
 
 answers_file() { echo "$ANSWERS_DIR/$TASK_ID.txt"; }

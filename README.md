@@ -17,7 +17,8 @@ Ansible, Terraform, Prometheus и Git. Набор сверен с тем, что
 
 - Ubuntu **22.04 или 24.04** (server), доступ по SSH, sudo, интернет.
 - 2 vCPU, **4 ГБ RAM** (k3s + Docker + PostgreSQL одновременно; с MariaDB и Prometheus лучше 6 ГБ), **30 ГБ** диска.
-- Перед сессией сделай **snapshot VM**: отката у задач нет, чистое состояние возвращает snapshot.
+- У каждой задачи есть откат (`trainer skip` / `trainer reset`), но перед сессией всё равно полезно сделать **snapshot VM**:
+  это страховка на случай, если по ходу решения ты сам поменяешь что-то, о чём задача не знает.
 
 Скопировать тренажёр на сервер (с Mac):
 ```bash
@@ -38,6 +39,9 @@ sudo ./trainer.sh list               # все задачи и прогресс (
 sudo ./trainer.sh start linux-01     # сломать и показать описание
 sudo ./trainer.sh random             # случайная нерешённая задача (как на собеседовании)
 sudo ./trainer.sh random linux nginx --junior   # случайная из тем и уровня; --all — и из решённых
+sudo ./trainer.sh skip               # сдаться: откатить текущую задачу, машина как до неё
+sudo ./trainer.sh reset linux-01     # откатить задачу после решения (отметка «решено» остаётся)
+sudo ./trainer.sh reset --all        # откатить все запускавшиеся задачи
 sudo ./trainer.sh show linux-01      # описание ещё раз
 sudo ./trainer.sh check linux-01     # проверить решение
 sudo ./trainer.sh theory linux-01    # теория по теме задачи
@@ -49,6 +53,12 @@ sudo ./trainer.sh solution linux-01  # разбор (спросит, точно 
 echo "alias trainer='sudo $HOME/devops-trainer/trainer.sh'" >> ~/.bashrc && source ~/.bashrc
 ```
 После этого без `sudo`: `trainer list`, `trainer start linux-01` и т.д.
+
+**Откат.** `skip` и `reset` запускают `reset.sh` задачи: он убирает всё, что создали поломка и решение
+(сервисы, пользователей, диски, правила iptables, сайты nginx, базы, контейнеры, namespace…), и возвращает
+исходные версии файлов, которые задача меняла (`resolv.conf`, `pg_hba.conf`, `prometheus.yml`, часовой пояс,
+`vm.swappiness` и т.п. запоминаются при первом `start`). Не откатываются установленные тренажёром пакеты
+и инструменты (nginx, Docker, PostgreSQL, k3s…) и записи в журнале systemd.
 
 Ответы для задач-расследований пишутся в `/root/answers/<id>.txt` в формате `key=value`.
 Kubernetes: `sudo kubectl …` или `export KUBECONFIG=/etc/rancher/k3s/k3s.yaml`.
@@ -231,24 +241,28 @@ lib/check.sh            хелперы проверок: check, check_http, serv
 lib/prereqs.sh          ensure_docker / ensure_postgres / ensure_nginx / ensure_k3s
 lib/disks.sh            loop-диски, переживающие ребут
 lib/apps/webapp.py      демо-сервис (stdlib Python), его используют многие задачи
-tasks/<тема>/<NN-slug>/ task.env, README.md, break.sh, check.sh, SOLUTION.md, THEORY.md
+tasks/<тема>/<NN-slug>/ task.env, README.md, break.sh, check.sh, reset.sh, SOLUTION.md, THEORY.md
 theory/interview.md     теория: вопросы с собеседований и ответы
 theory/tasks.map        какие вопросы относятся к какой задаче
 theory/build.py         собирает THEORY.md задач из interview.md по tasks.map
-tests/selftest.sh       самотест: break → check=FAIL → эталонный фикс → check=PASS
+tests/selftest.sh       самотест: break → check=FAIL → фикс → check=PASS → reset/skip → снимок как до задачи
+tests/state-snapshot.sh снимок состояния системы для проверки отката
 tests/fixes/<id>.sh     эталонные фиксы (спойлеры!)
 ```
 
 ## Самотест
 
-Проверяет, что каждая задача ломается и чинится эталонным решением. **Только на одноразовой VM**
-(или сделай snapshot и откати после):
+Проверяет каждую задачу целиком: break → check (FAIL) → эталонный фикс → check (PASS) → `reset`,
+затем ещё раз break → `skip`. После отката снимок системы (`tests/state-snapshot.sh`: юниты, пользователи,
+монтирования, loop-диски, netns, iptables, порты, ключевые конфиги, базы, контейнеры, namespace) должен
+совпасть со снимком до задачи. **Только на одноразовой VM** (или сделай snapshot и откати после):
 ```bash
-sudo ./tests/selftest.sh all          # ~40–60 минут
+sudo ./tests/selftest.sh all          # ~1,5–2 часа
+sudo ./tests/selftest.sh all --fast   # без проверки skip — вдвое быстрее
 sudo ./tests/selftest.sh linux        # одна тема
 sudo ./tests/selftest.sh linux-05     # одна задача
 ```
-Логи — в `/var/lib/devops-trainer/selftest/`.
+Логи и разница снимков (`*.diff`) — в `/var/lib/devops-trainer/selftest/`.
 
 ## Теория
 
@@ -261,9 +275,11 @@ python3 theory/build.py
 
 ## Как добавить свою задачу
 
-1. Создай `tasks/<тема>/<NN-slug>/` с файлами `task.env`, `README.md`, `break.sh`, `check.sh`, `SOLUTION.md`
+1. Создай `tasks/<тема>/<NN-slug>/` с файлами `task.env`, `README.md`, `break.sh`, `check.sh`, `reset.sh`, `SOLUTION.md`
    (ID = `<тема>-<NN>`).
 2. `break.sh` должен быть идемпотентным: при повторном запуске сначала убирать результат прошлого запуска.
-3. `check.sh` проверяет **результат**, а не способ решения, и явно проверяет запреты из «Ограничений».
-4. Добавь секцию `[<id>]` с вопросами в `theory/tasks.map` и запусти `python3 theory/build.py`.
-5. Добавь эталонный фикс в `tests/fixes/<id>.sh` и прогони `sudo ./tests/selftest.sh <id>`.
+   Если он меняет существующий системный файл, сначала `save_original <путь>` (или `remember <ключ> <значение>`).
+3. `reset.sh` убирает всё, что создали break и решение, и возвращает исходное (`restore_original`, `recall`).
+4. `check.sh` проверяет **результат**, а не способ решения, и явно проверяет запреты из «Ограничений».
+5. Добавь секцию `[<id>]` с вопросами в `theory/tasks.map` и запусти `python3 theory/build.py`.
+6. Добавь эталонный фикс в `tests/fixes/<id>.sh` и прогони `sudo ./tests/selftest.sh <id>`.

@@ -10,6 +10,8 @@ if ! mysql -uroot -e 'select 1' >/dev/null 2>&1; then
 fi
 mysql -uroot -e 'select 1' >/dev/null 2>&1 || die "Нет доступа root к MariaDB через сокет — сначала верни его (это и есть задача mysql-01)"
 systemctl unset-environment MYSQLD_OPTS 2>/dev/null || true
+# исходный способ входа root (на Ubuntu обычно «… OR unix_socket») — его вернёт trainer reset
+remember root-auth "$(mysql -uroot -NBe "SHOW CREATE USER 'root'@'localhost'")"
 
 mysql -uroot <<'SQL'
 DROP DATABASE IF EXISTS shop;

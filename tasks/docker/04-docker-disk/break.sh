@@ -5,6 +5,7 @@ TASK_ID=docker-04
 
 (( $(df --output=avail -m /var/lib/docker | tail -1) > 2000 )) || die "В /var/lib/docker меньше 2 ГБ свободного места"
 
+save_original /etc/docker/daemon.json
 docker rm -f chatty >/dev/null 2>&1 || true
 docker ps -aq --filter 'name=^junk-' | xargs -r docker rm -f >/dev/null
 docker pull -q alpine:3.20 >/dev/null
@@ -14,6 +15,7 @@ info "Создаю мусорные образы и контейнеры…"
 w=$(mktemp -d)
 cat > "$w/Dockerfile" <<'EOF'
 FROM alpine:3.20
+LABEL devops-trainer=docker-04
 ARG N=0
 RUN dd if=/dev/urandom of=/blob-$N bs=1M count=15 2>/dev/null
 EOF

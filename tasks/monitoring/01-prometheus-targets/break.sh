@@ -5,7 +5,8 @@ TASK_ID=monitoring-01
 
 install_webapp
 remove_unit metrics-app
-[[ -f $TASK_VAR/prometheus.yml.orig ]] || cp /etc/prometheus/prometheus.yml "$TASK_VAR/prometheus.yml.orig"
+save_original /etc/prometheus/prometheus.yml
+save_original /etc/prometheus/rules
 systemctl enable --now prometheus-node-exporter >/dev/null 2>&1 || true
 
 write_unit metrics-app <<EOF

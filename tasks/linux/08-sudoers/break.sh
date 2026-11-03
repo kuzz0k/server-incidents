@@ -6,6 +6,8 @@ TASK_ID=linux-08
 install_webapp
 remove_unit webhook
 rm -f /etc/sudoers.d/deploy.conf /etc/sudoers.d/deploy /etc/sudoers.d/zz-deploy /etc/sudoers.d/ops-admins
+getent group ops >/dev/null && remember ops-existed yes || remember ops-existed no
+id -u deploy >/dev/null 2>&1 && remember deploy-existed yes || remember deploy-existed no
 getent group ops >/dev/null || groupadd ops
 if ! id -u deploy >/dev/null 2>&1; then
   useradd --create-home --shell /bin/bash deploy

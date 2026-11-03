@@ -3,10 +3,8 @@ set -euo pipefail
 TASK_ID=linux-30
 . "$(dirname "$0")/../../../lib/common.sh"
 
-if [[ -f /usr/local/bin/backup-app.sh ]]; then
-  mv /usr/local/bin/backup-app.sh "/usr/local/bin/backup-app.sh.bak-$(date +%s)"
-  warn "Старый /usr/local/bin/backup-app.sh сохранён рядом как .bak"
-fi
+save_original /usr/local/bin/backup-app.sh     # trainer reset вернёт исходный вариант
+rm -f /usr/local/bin/backup-app.sh
 rm -rf /srv/app-data /var/backups/app-data
 mkdir -p "/srv/app-data/uploads/2026 october" /srv/app-data/config
 echo "db_host=10.0.0.5" > /srv/app-data/config/app.ini

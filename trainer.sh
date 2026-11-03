@@ -19,6 +19,10 @@ usage() {
                     запустить случайную нерешённую задачу (--all: из всех)
   show <id>         показать описание задачи ещё раз
   check <id>        проверить решение
+  skip [id]         сдаться: откатить изменения задачи, она снова «не начата»
+                    (без id — текущая начатая и не решённая задача)
+  reset <id>|--all  откатить изменения задачи (или всех запускавшихся),
+                    отметка «решено» сохраняется
   theory <id>       теория по теме задачи (вопросы с ответами из theory/interview.md)
   solution <id>     показать разбор (шаги, доп. вопросы)
 
@@ -87,6 +91,21 @@ open_tasks() {
     [[ -e $f ]] || continue
     id=$(basename "$f" .started)
     [[ -f $STATE_DIR/$id.solved || $id == "$1" ]] || echo "$id"
+  done
+}
+
+# Поставить зависимости задачи, ничего не ломая (нужно самотесту, чтобы снять снимок «до»)
+cmd_deps() {
+  load_task "$1"
+  require_ubuntu
+  mkdir -p "$STATE_DIR" "$ANSWERS_DIR"
+  ensure_base
+  install_webapp
+  install_disk_service
+  local r
+  for r in $REQUIRES; do
+    declare -F "ensure_$r" >/dev/null || die "Неизвестная зависимость $r в $TDIR/task.env"
+    "ensure_$r"
   done
 }
 
@@ -160,6 +179,54 @@ cmd_check() {
   fi
 }
 
+# Откат одной задачи: reset.sh убирает всё, что сделали break.sh и решение
+reset_task() {
+  load_task "$1"
+  [[ -f $TDIR/reset.sh ]] || die "Для $ID нет reset.sh"
+  info "Откатываю задачу $ID…"
+  if bash "$TDIR/reset.sh"; then
+    rm -rf "${TRAINER_VAR:?}/tasks/$ID" "$ANSWERS_DIR/$ID.txt" "$ANSWERS_DIR/$ID.csv"
+    rm -f "$STATE_DIR/$ID.started"
+    info "Задача $ID откачена."
+  else
+    warn "reset.sh задачи $ID завершился с ошибкой — проверь вывод выше (или откати snapshot VM)"
+    return 1
+  fi
+}
+
+confirm() {
+  [[ -n ${TRAINER_YES:-} ]] && return 0
+  read -r -p "$1 [y/N] " ans
+  [[ $ans == [yYдД]* ]]
+}
+
+cmd_skip() {
+  local id=${1:-} open
+  if [[ -z $id ]]; then
+    open=$(open_tasks '')
+    [[ -n $open ]] || die "Нет начатых и не решённых задач. Укажи ID: trainer skip <id>"
+    (( $(grep -c . <<<"$open") == 1 )) || die "Начато несколько задач: $(tr '\n' ' ' <<<"$open")— укажи ID: trainer skip <id>"
+    id=$open
+  fi
+  confirm "Пропустить $id и откатить её изменения?" || exit 0
+  reset_task "$id"
+  rm -f "$STATE_DIR/$id.solved"
+}
+
+cmd_reset() {
+  [[ $# -ge 1 ]] || die "Укажи ID задачи или --all"
+  local ids=() f rc=0 id
+  if [[ $1 == --all ]]; then
+    for f in "$STATE_DIR"/*.started; do [[ -e $f ]] && ids+=("$(basename "$f" .started)"); done
+    ((${#ids[@]})) || { info "Запущенных задач нет — откатывать нечего."; return 0; }
+    confirm "Откатить задачи: ${ids[*]}?" || exit 0
+  else
+    ids=("$1")
+  fi
+  for id in "${ids[@]}"; do reset_task "$id" || rc=1; done
+  return $rc
+}
+
 cmd_theory() {
   load_task "$1"
   [[ -f $TDIR/THEORY.md ]] || die "Для $ID нет THEORY.md — собери: python3 theory/build.py"
@@ -194,6 +261,7 @@ cmd_setup() {
   fi
   mkdir -p "$STATE_DIR" "$ANSWERS_DIR"
   install_webapp
+  install_disk_service
   info "Готово. Список задач: sudo ./trainer.sh list"
 }
 
@@ -212,6 +280,9 @@ main() {
     random)   cmd_random "$@" ;;
     show)     [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_show "$1" ;;
     check)    [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_check "$1" ;;
+    deps)     [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_deps "$1" ;;
+    skip)     cmd_skip "${1:-}" ;;
+    reset)    cmd_reset "$@" ;;
     theory)   [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_theory "$1" ;;
     solution) [[ $# -ge 1 ]] || die "Укажи ID задачи"; cmd_solution "$1" ;;
     *) usage; exit 1 ;;

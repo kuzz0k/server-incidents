@@ -3,6 +3,7 @@ set -euo pipefail
 TASK_ID=linux-28
 . "$(dirname "$0")/../../../lib/common.sh"
 
+for p in jq tree; do pkg_installed "$p" && remember "$p-installed" yes || remember "$p-installed" no; done
 remove_unit apt-autoupdate
 rm -f /etc/apt/sources.list.d/vendor-tools.list
 mkdir -p "$TRAINER_LIB"

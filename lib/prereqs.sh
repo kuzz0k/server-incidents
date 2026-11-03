@@ -86,6 +86,8 @@ ensure_k3s() {
   fi
   systemctl is-active -q k3s || systemctl start k3s
   wait_until 120 kc get nodes || die "k3s API не отвечает: systemctl status k3s"
+  # сразу после установки нода ещё не зарегистрирована, и kubectl wait падает с «no matching resources»
+  wait_until 120 bash -c 'k3s kubectl get nodes -o name | grep -q .' || die "Нода k3s не зарегистрировалась"
   kc wait --for=condition=Ready node --all --timeout=180s >/dev/null || die "Нода k3s не стала Ready"
 }
 
