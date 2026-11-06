@@ -15,6 +15,7 @@
   REQUIRE_HEADER  заголовок, без которого запрос получает 400
   SLOW            медленные пути: "/report:8,/export:3" — пауза в секундах перед ответом
   METRICS         1 — отдавать метрики Prometheus на /metrics
+  BURN            «тяжёлые» пути: "/price:0.3" — потратить столько секунд процессорного времени
 """
 import os
 import signal
@@ -77,6 +78,10 @@ for item in filter(None, (x.strip() for x in CFG.get("SLOW", "").split(","))):
     path, _, sec = item.partition(":")
     SLOW[path] = float(sec or 0)
 METRICS = CFG.get("METRICS", "") == "1"
+BURN = {}
+for item in filter(None, (x.strip() for x in CFG.get("BURN", "").split(","))):
+    path, _, sec = item.partition(":")
+    BURN[path] = float(sec or 0)
 STARTED = time.time()
 REQUESTS = 0
 
@@ -148,6 +153,11 @@ class Handler(BaseHTTPRequestHandler):
         delay = next((s for p, s in SLOW.items() if self.path.startswith(p)), 0)
         if delay:
             time.sleep(delay)
+        burn = next((s for p, s in BURN.items() if self.path.startswith(p)), 0)
+        if burn:
+            start = time.thread_time()
+            while time.thread_time() - start < burn:
+                pass
         if METRICS and self.path == "/metrics":
             self.reply(200, "\n".join([
                 "# HELP app_requests_total Total HTTP requests.",

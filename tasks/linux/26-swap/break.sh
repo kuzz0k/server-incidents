@@ -10,7 +10,7 @@ sed -i '\|/var/lib/swap/trainer.swap|d' /etc/fstab
 remember swappiness "$(sysctl -n vm.swappiness)"
 remember sysctl-d-files "$(ls /etc/sysctl.d 2>/dev/null | tr '\n' ' ')"
 save_original /etc/sysctl.conf
-grep -rlsE '^\s*vm\.swappiness' /etc/sysctl.conf /etc/sysctl.d/ | while read -r f; do
+{ grep -rlsE '^\s*vm\.swappiness' /etc/sysctl.conf /etc/sysctl.d/ || true; } | while read -r f; do
   sed -i -E 's/^(\s*vm\.swappiness)/# trainer-linux-26: \1/' "$f"
 done
 sysctl -qw vm.swappiness=60

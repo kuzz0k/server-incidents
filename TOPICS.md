@@ -12,7 +12,7 @@
 `lsblk -f` · `blkid` · `findmnt --verify` · `mount -a` · `pvs/vgs/lvs` · `pvcreate` · `vgextend` · `lvextend -r` ·
 `resize2fs` · `logrotate -d` · `truncate -s 0`
 
-→ linux-01, 02, 03, 04, 05, 06, 42 (journald)
+→ linux-01, 02, 03, 04, 05, 06, 42 (journald), 45 (read-only после сбоя, fsck), 46 (квоты), 47 (noexec)
 
 ## 2. Linux: пользователи, права, sudo, SSH
 **Уметь:** читать и выставлять права и владельцев, понимать x на каталоге, setgid/sticky, ACL,
@@ -21,7 +21,7 @@
 `ls -l` · `namei -l` · `chmod` / `chown` · `sudo -u user test -r` · `setfacl` / `getfacl` · `lsattr` / `chattr` ·
 `visudo -c` · `sudo -l -U user` · `journalctl -u ssh` · `ssh -v`
 
-→ linux-07, 08, 09, 10, 11, 41 (заведение пользователей)
+→ linux-07, 08, 09, 10, 11, 52 (истёкший аккаунт, `from=` в authorized_keys), 53 (umask сервиса), 60 (UID после переноса данных), 61 (сменился host key)
 
 ## 3. Linux: процессы и systemd
 **Уметь:** прочитать статус и логи сервиса, найти ошибку в юните, включить автозагрузку, переопределить
@@ -31,7 +31,9 @@
 `systemctl show -p ...` · `systemd-analyze verify` · `ps -eo pid,ppid,stat,%cpu,cmd --sort=-%cpu` · `top` ·
 `strace -p` · `/proc/PID/limits` · `dmesg -T | grep -i oom` · `ss -ltnp` · `kill` и сигналы · `crontab` / `/etc/cron.d`
 
-→ linux-12, 13, 14, 15, 16, 17, 18, 19, 20, 26, 33 (кто пишет в файл), 34 (iowait, D-state), 35 (systemd timer), 36 (написать юнит)
+→ linux-12, 13, 14, 15, 16, 17, 18, 19, 20, 26, 33 (кто пишет в файл), 34 (iowait, D-state), 35 (systemd timer), 36 (написать юнит),
+  48 (процесс в состоянии T), 49 (TasksMax), 50 (CPU throttling), 51 (расследование по journalctl), 54 (capabilities, порт < 1024),
+  55 (RuntimeDirectory), 56 (inotify watches), 57 (strace), 58 (ldconfig, .so), 59 (утечка памяти, MemoryMax)
 
 ## 4. Linux: сеть
 **Уметь:** диагностировать по слоям (интерфейс → адрес → маршрут → фаервол → приложение), отличить
@@ -51,14 +53,12 @@ DNS-проблему от сетевой, refused от timeout, найти и п
 
 → linux-26, 27, 28, 37 (dpkg: недонастроенный пакет)
 
-## 6. Bash и обработка текста
-**Уметь:** с нуля написать конвейер разбора лога, надёжный скрипт (кавычки, `set -euo pipefail`, коды возврата,
-stderr, trap), найти файлы по признакам.
+## 6. Обработка текста в консоли
+**Уметь:** с нуля написать конвейер разбора лога, вытащить данные из JSON, найти файлы по признакам.
 
-`awk` · `sort | uniq -c | sort -rn` · `cut` · `grep -E` · `sed` · `xargs -0` · `find -mtime/-perm/-nouser/-exec` ·
-`shellcheck` · `bash -x`
+`awk` · `sort | uniq -c | sort -rn` · `cut` · `grep -E` · `sed` · `xargs -0` · `find -mtime/-perm/-nouser/-exec` · `jq`
 
-→ linux-29, 30, 31, 32, 39 (jq: JSON → CSV), 40 (скрипт-алерт по дискам), 43 (find -mtime, пробелы в именах)
+→ linux-29, 32, 39 (jq: JSON → CSV)
 
 ## 7. nginx
 **Уметь:** читать error.log, понимать 403/404/413/502/504, проксировать с правильными заголовками и путями,

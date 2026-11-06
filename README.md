@@ -1,6 +1,6 @@
-76 практических задач уровня Junior/Middle. Скрипт ломает голую Ubuntu-VM так, как
+88 практических задач уровня Junior/Middle. Скрипт ломает голую Ubuntu-VM так, как
 ломаются реальные серверы, а ты чинишь её, как на troubleshooting-этапе собеседования.
-Около 60% задач (44) — Linux, остальные — nginx, PostgreSQL, MariaDB, Docker, Kubernetes,
+Около 64% задач (56) — Linux, остальные — nginx, PostgreSQL, MariaDB, Docker, Kubernetes,
 Ansible, Terraform, Prometheus и Git. Набор сверен с тем, что дают на собеседованиях и в тренажёрах
 вроде SadServers (см. «Откуда задачи»).
 
@@ -84,7 +84,7 @@ Kubernetes: `sudo kubectl …` или `export KUBECONFIG=/etc/rancher/k3s/k3s.ya
 
 Уровень: **J** — Junior, **M** — Middle. Время — ориентир в минутах.
 
-### Linux (44)
+### Linux (56)
 
 | ID | Задача | Ур. | Мин |
 |---|---|---|---|
@@ -117,8 +117,6 @@ Kubernetes: `sudo kubectl …` или `export KUBECONFIG=/etc/rancher/k3s/k3s.ya
 | [linux-27](tasks/linux/27-time-drift/README.md) | Сбито системное время | J | 10 |
 | [linux-28](tasks/linux/28-apt-broken/README.md) | apt не может установить пакеты | J | 15 |
 | [linux-29](tasks/linux/29-log-parsing/README.md) | Разбор access.log в консоли | J | 20 |
-| [linux-30](tasks/linux/30-backup-script/README.md) | Написать скрипт бэкапа с ротацией | J | 30 |
-| [linux-31](tasks/linux/31-fix-deploy-script/README.md) | Починить сломанный deploy.sh | J | 20 |
 | [linux-32](tasks/linux/32-find-files/README.md) | Найти файлы по признакам (find) | J | 15 |
 | [linux-33](tasks/linux/33-log-writer/README.md) | Кто пишет в этот лог? | J | 10 |
 | [linux-34](tasks/linux/34-iowait/README.md) | Высокий load average при простаивающем CPU | M | 20 |
@@ -127,11 +125,25 @@ Kubernetes: `sudo kubectl …` или `export KUBECONFIG=/etc/rancher/k3s/k3s.ya
 | [linux-37](tasks/linux/37-dpkg-interrupted/README.md) | Пакет установился наполовину | J | 15 |
 | [linux-38](tasks/linux/38-port-redirect/README.md) | Открыть приложение на другом порту, не меняя его | M | 15 |
 | [linux-39](tasks/linux/39-jq-json/README.md) | JSON в CSV: разбор инвентаря через jq | J | 20 |
-| [linux-40](tasks/linux/40-disk-alert-script/README.md) | Скрипт-алерт о заполнении дисков | J | 25 |
-| [linux-41](tasks/linux/41-onboard-users/README.md) | Завести пользователей по списку | J | 25 |
 | [linux-42](tasks/linux/42-journald-disk/README.md) | Журнал systemd съел диск | J | 10 |
-| [linux-43](tasks/linux/43-log-cleaner/README.md) | Скрипт очистки логов делает не то | J | 20 |
 | [linux-44](tasks/linux/44-client-cant-connect/README.md) | Клиент не достучался до API: куда он ходит? | M | 20 |
+| [linux-45](tasks/linux/45-readonly-fsck/README.md) | Диск ушёл в read-only после сбоя | M | 20 |
+| [linux-46](tasks/linux/46-disk-quota/README.md) | Disk quota exceeded при свободном месте | M | 15 |
+| [linux-47](tasks/linux/47-noexec/README.md) | Permission denied у скрипта с правами 755 | J | 15 |
+| [linux-48](tasks/linux/48-stopped-process/README.md) | Сервис «работает», но не отвечает | J | 10 |
+| [linux-49](tasks/linux/49-tasks-max/README.md) | can't start new thread | M | 15 |
+| [linux-50](tasks/linux/50-cpu-throttling/README.md) | Сервис тормозит, а сервер простаивает | M | 15 |
+| [linux-51](tasks/linux/51-journal-investigation/README.md) | Разбор инцидента по journalctl | J | 15 |
+| [linux-52](tasks/linux/52-account-expired/README.md) | Сотрудника не пускает по SSH после отпуска | J | 15 |
+| [linux-53](tasks/linux/53-service-umask/README.md) | Отчёты есть, но веб их не видит | J | 15 |
+| [linux-54](tasks/linux/54-privileged-port/README.md) | Порт 389 без root | M | 15 |
+| [linux-55](tasks/linux/55-runtime-directory/README.md) | После ребута пропал каталог в /run | J | 10 |
+| [linux-56](tasks/linux/56-inotify-watches/README.md) | upper limit on inotify watches reached | M | 15 |
+| [linux-57](tasks/linux/57-strace-config/README.md) | Программа не находит конфиг, а какой — не говорит | J | 15 |
+| [linux-58](tasks/linux/58-shared-library/README.md) | cannot open shared object file | M | 15 |
+| [linux-59](tasks/linux/59-memory-leak/README.md) | Кто съедает память сервера | M | 15 |
+| [linux-60](tasks/linux/60-uid-mismatch/README.md) | Данные перенесли со старого сервера — Permission denied | J | 10 |
+| [linux-61](tasks/linux/61-ssh-host-key-changed/README.md) | REMOTE HOST IDENTIFICATION HAS CHANGED | M | 15 |
 
 ### nginx (6)
 
@@ -212,9 +224,9 @@ Kubernetes: `sudo kubectl …` или `export KUBECONFIG=/etc/rancher/k3s/k3s.ya
 
 ## Предлагаемый порядок
 
-1. **Неделя 1 — Linux база:** linux-01, 07, 09, 12, 13, 14, 15, 17, 22, 24, 29, 32, 33, 36.
-2. **Неделя 2 — Linux глубже:** linux-02, 03, 04, 05, 06, 10, 11, 18, 19, 20, 26, 35, 42, 43.
-3. **Неделя 3 — bash и сеть:** linux-30, 31, 39, 40, 41 + linux-08, 16, 21, 23, 25, 27, 28, 34, 37, 38, 44.
+1. **Неделя 1 — Linux база:** linux-01, 07, 09, 12, 13, 14, 15, 17, 22, 24, 29, 32, 33, 36, 48, 55, 60.
+2. **Неделя 2 — Linux глубже:** linux-02, 03, 04, 05, 06, 10, 11, 18, 19, 20, 26, 35, 42, 45, 46, 47, 52, 53.
+3. **Неделя 3 — процессы, ядро и сеть:** linux-08, 16, 21, 23, 25, 27, 28, 34, 37, 38, 39, 44, 49, 50, 51, 54, 56, 57, 58, 59, 61.
 4. **Неделя 4 — веб и базы:** nginx-01…06, postgres-01…05, mysql-01.
 5. **Неделя 5 — контейнеры и IaC:** docker-01…07, k8s-01…06, ansible-01, 02, terraform-01, monitoring-01, git-01…03.
 6. **Финал:** `sudo ./trainer.sh random` — задача вслепую, решай на время.
